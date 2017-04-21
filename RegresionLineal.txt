@@ -1,0 +1,209 @@
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+double sum, sumx, sumx2, sumy, sumxy, promx, promy, a0, a1, sr, st, desvest, s, r, alfa, beta;
+
+// Método que hace una sumatoria.
+double sumatoria(double valores[], int modo, int n) {
+  sum = 0;
+  // Sumatoria normal
+  if (modo == 0) {
+    for (int i = 0; i < n; i++) {
+      sum += valores[i];
+    }
+  }
+  // Sumatoria de los cuadrados 
+  else if (modo == 1) {
+    for (int i = 0; i < n; i++) {
+      sum += pow(valores[i], 2);
+    }
+  }
+ return sum;
+}
+
+//Sumatoria de los productos de los valores 
+double sumatoriaMult(double x[], double y[], int n) {
+  sum = 0;
+  for (int i = 0; i < n; i++) {
+    sum += (x[i]*y[i]);
+  }
+  return sum;
+}
+
+double getSt(double y[], double promy, int n) {
+  sum = 0;
+  for (int i = 0; i < n; i++) {
+    sum += pow((y[i] - promy),2);
+  }
+  return sum;
+}
+
+double getSr(double x[], double y[], double a0, double a1, int n) {
+  sum = 0;
+  for (int i = 0; i < n; i++) {
+    sum += pow((y[i] - a0 - a1*x[i]), 2);
+  }
+  return sum;
+}
+
+//Recibe los datos x/y y el total
+void regresionLineal(double x[], double y[], int n) {
+  sumx = sumatoria(x, 0, n);
+  sumy = sumatoria(y, 0, n);
+  sumx2 = sumatoria(x, 1, n);
+  sumxy = sumatoriaMult(x, y, n);
+  promx = sumx / n;
+  promy = sumy / n;
+
+ a1 = ((n*sumxy) - (sumx*sumy)) / ((n*sumx2) - pow(sumx, 2));
+ a0 = promy - a1*promx;
+
+ //Ecuación de la recta ajustada.
+ cout << "La recta es: " << a0 << " + " << a1 << "x" << endl;
+
+ // Obtiene sr y st para la cuantificación del error.
+ sr = getSr(x, y, a0, a1, n);
+ st = getSt(y, promy, n);
+
+ //Desviación estándar y el error estándar de la estimación.
+ desvest = sqrt(st / (n - 1));
+ s = sqrt(sr / (n - 2));
+ cout << "Desviacion Estandar: " << desvest << endl;
+ cout << "Error estandar de la estimacion: " << s << endl;
+
+ //Coeficiente determinacion y correlacion
+ r = (st - sr) / st;
+ cout << "Coeficiente de determinacion: " << r << endl;
+ cout << "Coeficiente de correlacion: " << sqrt(r) << endl;
+
+}
+
+void linealizacion(double x[], double y[], int n, int modo) {
+	double *logx = new double[n];
+	double *logy = new double[n];
+
+ //Modelo exponencial: aplica logaritmo natural a los valores del
+ //eje de las ordenadas.
+	if (modo == 0) {
+		for (int i = 0; i < n; i++) {
+			logy[i] = log(y[i]);
+		}
+
+ //Obtiene los valores de alfa y beta para el
+ //ajuste no lineal
+	beta = (logy[1] - logy[0]) / (x[1] - x[0]);
+	alfa = beta*(-x[0]) + logy[0];
+
+	cout << "La linealizacion es: ln(y) = " << alfa << " + " << beta << "x" << endl;
+	cout << "La curva ajustada es: y = " << exp(alfa) << "e ^ " << beta << "x" << endl;
+
+ //Valores para la fórmula de regresión lineal.
+	sumx = sumatoria(x, 0, n);
+	cout << "suma de x: " << sumx << endl;
+	sumy = sumatoria(logy, 0, n);
+	cout << "suma de y: " << sumy << endl;
+	sumx2 = sumatoria(x, 1, n);
+	cout << "suma de x2: " << sumx2 << endl;
+	sumxy = sumatoriaMult(x, logy, n);
+	cout << "suma de xy: " << sumxy << endl;
+	promx = sumx / n;
+	cout << "prmedio de x: " << promx << endl;
+	promy = sumy / n;
+	cout << "promedi de y: " << promy << endl;
+
+ // Se aplican las fórmulas de a1 y a0
+	a1 = ((n*sumxy) - (sumx*sumy)) / ((n*sumx2) - pow(sumx, 2));
+	cout << "a1: " << a1 << endl;
+	a0 = promy - a1*promx;
+	cout << "a0: " << a0 << endl;
+
+ // Obtiene sr y st para la cuantificación del error.
+	sr = getSr(x, logy, a0, a1, n);
+	cout << "sr: " << sr << endl;
+	st = getSt(logy, promy, n);
+	cout << "st: " << st << endl;
+
+ //Desviación estándar y el error estándar de la estimación.
+	desvest = sqrt(st / (n - 1));
+	s = sqrt(sr / (n - 2));
+	cout << "Desviacion estandar: " << desvest << endl;
+	cout << "Error estandra de la estimacion: " << s << endl;
+
+ //Coeficiente de determinación/correlación.
+	r = (st - sr) / st;
+	cout << "Coeficiente de determinacion: " << r << endl;
+	cout << "Coeficiente de correlacion: " << sqrt(r) << endl;
+
+ //Modelo de potencias: aplica el logaritmo común a ambos ejes del
+ //plano bidimensional.
+	}else if (modo == 1){
+		for (int i = 0; i < n; i++) {
+			logx[i] = log10(x[i]);
+			logy[i] = log10(y[i]);
+		}
+
+ //Obtiene los valores de alfa y beta para el
+ //ajuste no lineal
+	beta = (logy[1] - logy[0]) / (logx[1] - logx[0]);
+	alfa = beta*(-logx[0]) + logy[0];
+ 
+	cout << "La linealizacion es: log(y) = " << beta << "log(x) + " << alfa << endl;
+	cout << "La curva ajustada es: y = " << pow(10, alfa) << "x ^ " << beta << endl;
+ 
+ //Valores necesarios para la fórmula de regresión lineal.
+	sumx = sumatoria(logx, 0, n);
+	cout << "suma x: " << sumx << endl;
+	sumy = sumatoria(logy, 0, n);
+	cout << "suma y: " << sumy << endl;
+	sumx2 = sumatoria(logx, 1, n);
+	cout << "suma x2: " << sumx2 << endl;
+	sumxy = sumatoriaMult(logx, logy, n);
+	cout << "suma xy: " << sumxy << endl;
+	promx = sumx / n;
+	cout << "promedio x: " << promx << endl;
+	promy = sumy / n;
+	cout << "promedio y: " << promy << endl;
+
+	a1 = ((n*sumxy) - (sumx*sumy)) / ((n*sumx2) - pow(sumx, 2));
+	cout << "a1: " << a1 << endl;
+	a0 = promy - a1*promx;
+	cout << "a0: " << a0 << endl;
+
+ // Obtiene sr y st para la cuantificación del error.
+	sr = getSr(logx, logy, a0, a1, n);
+	cout << "sr: " << sr << endl;
+	st = getSt(logy, promy, n);
+	cout << "st: " << st << endl;
+
+ //Desviación estándar y el error estándar de la estimación.
+	desvest = sqrt(st / (n - 1));
+	s = sqrt(sr / (n - 2));
+
+ //Coeficiente de determinación/correlación.
+	r = (st - sr) / st;
+	cout << "Coeficiente de determinacion: " << r << endl;
+	cout << "Coeficiente de correlacion: " << sqrt(r) << endl;
+
+	}
+}
+
+int main() {
+	double x[] = {1,2,3,4,5,6,7};
+	double y[] = {0.5,2.5,2,4,3.5,6,5.5};
+
+ linealizacion(x, y, (sizeof(x) / sizeof(x[0])), 1);
+ //0 para exponencial, 1 para potencial
+ return 0;
+}
+
+
+/*int main() {
+  double x[] = {0,2,4,6,9,11,12,15,17,19};
+  double y[] = {5,6,7,6,9,8,7,10,12,12};
+
+  regresionLineal(x, y, (sizeof(x)/sizeof(x[0])));
+
+  return 0;
+}*/
